@@ -264,5 +264,3 @@ Save and deploy. Go to "Test" section and enable "Skill testing" in "Development
 You are now ready to use your Alexa in ChatGPT mode. You should see results like this:
 
 ![test](images/test.png)
-
-Please note that running this skill will incur costs for using both AWS Lambda and the OpenAI API. Make sure you understand the pricing structure and monitor your usage to avoid unexpected charges.
