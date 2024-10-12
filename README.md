@@ -1,11 +1,9 @@
-# Alexa GPT
+# Alexa AI
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-Boost your Alexa by making it respond as ChatGPT.
-
-This repository contains a tutorial on how to create a simple Alexa skill that uses the OpenAI API to generate responses from the ChatGPT model.
-
+Azure OpenAI GPT-4.0 will be integrated, and the project is Alexa AI: Boost your Alexa by enhancing its responses.
+This repository contains a tutorial on how to create a simple Alexa skill that uses the OpenAI API to generate responses from the model.
 <div align="center">
   <img src="images/test.png" />
 </div>
