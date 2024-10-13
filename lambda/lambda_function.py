@@ -7,9 +7,14 @@ import requests
 import logging
 import json
 
+from utils import load_system_prompt  # Importa la funzione dal file utils
+
+# Carica il system prompt dal file
+system_prompt_file_path = "path/to/your/system_prompt.txt"
+system_prompt = load_system_prompt(system_prompt_file_path)
+
 api_key = "YOUR_API_KEY"
 api_endpoint =" YOUR_API_ENDPOINT"
-system_prompt = "YOUR_SYSTEM_PROMPT"
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
