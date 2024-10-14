@@ -1,11 +1,21 @@
-# Alexa AI
+# Alexa AI: Alexa Enhancement with Azure OpenAI GPT-4  
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-Azure OpenAI GPT-4.0 will be integrated, and the project is Alexa AI: Boost your Alexa by enhancing its responses.
-This repository contains a tutorial on how to create a simple Alexa skill that uses the OpenAI API to generate responses from the model.
+  
+Welcome to the **Alexa AI ** project! This repository serves as a comprehensive guide to integrating the powerful Azure OpenAI GPT-4 API with Alexa, allowing you to significantly elevate your Alexa skill's response capabilities.  
+  
+## Project Overview  
+By harnessing the advanced natural language understanding of GPT-4, you can transform your Alexa skill into a more engaging and intelligent assistant. This tutorial will walk you through the process of setting up and connecting the OpenAI API with Alexa, enabling dynamic and contextually rich interactions.  
+  
+## Key Features  
+- **Seamless Integration**: Step-by-step instructions to integrate Azure OpenAI GPT-4 with your Alexa skill.  
+- **Enhanced Responses**: Enable Alexa to generate more natural, informative, and context-aware responses.  
+- **User-Friendly Guide**: Detailed documentation and code samples to assist developers of all levels.  
+
+  
 <div align="center">
-  <img src="images/test.png" />
+  <img src="images/intro.png" />
 </div>
 
 ## Prerequisites
@@ -37,7 +47,7 @@ Choose "Alexa-hosted (Python)" for the backend resources.
 
 ### 5.
 You now have two options:
-- Click on "Import Skill", paste the link of this repository (https://github.com/k4l1sh/alexa-gpt.git) and click on "Import".
+- Click on "Import Skill", paste the link of this repository (https://github.com/bsab/Alexa-AI-Skill.git) and click on "Import".
 ![template](images/import_git_skill.png)
 
 Or if you want to create the skill manually
@@ -115,8 +125,7 @@ Create an OpenAI API key on the [API keys page](https://platform.openai.com/api-
 Replace your lambda_functions.py file with the [provided lambda_function.py](lambda/lambda_function.py).
 
 ```python
-from ask_sdk_core.dispatch_components import AbstractExceptionHandler
-from ask_sdk_core.dispatch_components import AbstractRequestHandler
+from ask_sdk_core.dispatch_components import AbstractExceptionHandler, AbstractRequestHandler
 from ask_sdk_core.skill_builder import SkillBuilder
 from ask_sdk_core.handler_input import HandlerInput
 from ask_sdk_model import Response
@@ -125,113 +134,75 @@ import requests
 import logging
 import json
 
-# Set your OpenAI API key
+from utils import load_system_prompt  # Importa la funzione dal file utils
+
+# Carica il system prompt dal file
+system_prompt_file_path = "path/to/your/system_prompt.txt"
+system_prompt = load_system_prompt(system_prompt_file_path)
+
 api_key = "YOUR_API_KEY"
+api_endpoint =" YOUR_API_ENDPOINT"
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
-class LaunchRequestHandler(AbstractRequestHandler):
-    """Handler for Skill Launch."""
-    def can_handle(self, handler_input):
-        # type: (HandlerInput) -> bool
 
+class LaunchRequestHandler(AbstractRequestHandler):
+    def can_handle(self, handler_input):
         return ask_utils.is_request_type("LaunchRequest")(handler_input)
 
     def handle(self, handler_input):
-        # type: (HandlerInput) -> Response
-        speak_output = "Chat G.P.T. mode activated"
-
+        speak_output = "Alexa gen AI mode activated"
         session_attr = handler_input.attributes_manager.session_attributes
         session_attr["chat_history"] = []
+        return handler_input.response_builder.speak(speak_output).ask(speak_output).response
 
-        return (
-            handler_input.response_builder
-                .speak(speak_output)
-                .ask(speak_output)
-                .response
-        )
 
 class GptQueryIntentHandler(AbstractRequestHandler):
-    """Handler for Gpt Query Intent."""
     def can_handle(self, handler_input):
-        # type: (HandlerInput) -> bool
         return ask_utils.is_intent_name("GptQueryIntent")(handler_input)
 
     def handle(self, handler_input):
-        # type: (HandlerInput) -> Response
         query = handler_input.request_envelope.request.intent.slots["query"].value
-
         session_attr = handler_input.attributes_manager.session_attributes
         if "chat_history" not in session_attr:
             session_attr["chat_history"] = []
         response = generate_gpt_response(session_attr["chat_history"], query)
         session_attr["chat_history"].append((query, response))
+        return handler_input.response_builder.speak(response).ask("Any other questions?").response
 
-        return (
-                handler_input.response_builder
-                    .speak(response)
-                    .ask("Any other questions?")
-                    .response
-            )
-
-class CatchAllExceptionHandler(AbstractExceptionHandler):
-    """Generic error handling to capture any syntax or routing errors."""
-    def can_handle(self, handler_input, exception):
-        # type: (HandlerInput, Exception) -> bool
-        return True
-
-    def handle(self, handler_input, exception):
-        # type: (HandlerInput, Exception) -> Response
-        logger.error(exception, exc_info=True)
-
-        speak_output = "Sorry, I had trouble doing what you asked. Please try again."
-
-        return (
-            handler_input.response_builder
-                .speak(speak_output)
-                .ask(speak_output)
-                .response
-        )
 
 class CancelOrStopIntentHandler(AbstractRequestHandler):
-    """Single handler for Cancel and Stop Intent."""
     def can_handle(self, handler_input):
-        # type: (HandlerInput) -> bool
         return (ask_utils.is_intent_name("AMAZON.CancelIntent")(handler_input) or
                 ask_utils.is_intent_name("AMAZON.StopIntent")(handler_input))
 
     def handle(self, handler_input):
-        # type: (HandlerInput) -> Response
-        speak_output = "Leaving Chat G.P.T. mode"
+        speak_output = "Leaving Alexa Gen AI mode"
+        return handler_input.response_builder.speak(speak_output).response
 
-        return (
-            handler_input.response_builder
-                .speak(speak_output)
-                .response
-        )
+
+class CatchAllExceptionHandler(AbstractExceptionHandler):
+    def can_handle(self, handler_input, exception):
+        return True
+
+    def handle(self, handler_input, exception):
+        logger.error(exception, exc_info=True)
+        speak_output = "Sorry, I had trouble doing what you asked. Please try again."
+        return handler_input.response_builder.speak(speak_output).ask(speak_output).response
+
 
 def generate_gpt_response(chat_history, new_question):
-    """Generates a GPT response to a new question"""
-    headers = {
-        "Authorization": f"Bearer {api_key}",
-        "Content-Type": "application/json"
-    }
-    url = "https://api.openai.com/v1/chat/completions"
-    messages = [{"role": "system", "content": "You are a helpful assistant. Answer in 50 words or less."}]
+    headers = {"Content-Type": "application/json", "api-key": api_key}
+    url = api_endpoint
+    messages = [{"role": "system", "content": system_prompt}]
     for question, answer in chat_history[-10:]:
         messages.append({"role": "user", "content": question})
         messages.append({"role": "assistant", "content": answer})
     messages.append({"role": "user", "content": new_question})
-    
-    data = {
-        "model": "gpt-4o-mini",
-        "messages": messages,
-        "max_tokens": 300,
-        "temperature": 0.5
-    }
+    data = {"messages": messages, "temperature": 0.7, "top_p": 0.95, "max_tokens": 300}
     try:
-        response = requests.post(url, headers=headers, data=json.dumps(data))
+        response = requests.post(url, headers=headers, json=data)
         response_data = response.json()
         if response.ok:
             return response_data['choices'][0]['message']['content']
@@ -240,8 +211,8 @@ def generate_gpt_response(chat_history, new_question):
     except Exception as e:
         return f"Error generating response: {str(e)}"
 
-sb = SkillBuilder()
 
+sb = SkillBuilder()
 sb.add_request_handler(LaunchRequestHandler())
 sb.add_request_handler(GptQueryIntentHandler())
 sb.add_request_handler(CancelOrStopIntentHandler())
@@ -251,16 +222,14 @@ lambda_handler = sb.lambda_handler()
 ```
 
 ### 12.
-Put your OpenAI API key that you got from your [OpenAI account](https://platform.openai.com/api-keys)
-
-![openai_api_key](images/api_key.png)
-
-### 13.
 Save and deploy. Go to "Test" section and enable "Skill testing" in "Development".
 
 ![development_enabled](images/development_enabled.png)
 
-### 14.
+### 13.
 You are now ready to use your Alexa in ChatGPT mode. You should see results like this:
 
 ![test](images/test.png)
+
+## Contributing  
+We welcome contributions! If you have ideas for improvements or new features, please submit a pull request or open an issue.  
